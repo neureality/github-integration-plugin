@@ -95,6 +95,17 @@ public class GitHubPRTrigger extends GitHubTrigger<GitHubPRTrigger> {
      */
     private boolean preStatus = false;
 
+    /** Skip all checks for draft PRs (no events run). */
+    private boolean ignoreDrafts = true;
+
+    @DataBoundSetter
+    public void setIgnoreDrafts(boolean ignoreDrafts) {
+        this.ignoreDrafts = ignoreDrafts;
+    }
+    public boolean isIgnoreDrafts() {
+        return ignoreDrafts;
+    }
+
     @CheckForNull
     private GitHubPRUserRestriction userRestriction;
     @CheckForNull
@@ -309,6 +320,26 @@ public class GitHubPRTrigger extends GitHubTrigger<GitHubPRTrigger> {
                     .filter(badState(localRepository, listener))
                     .filter(notUpdated(localRepository, listener))
                     .toSet();
+
+            if (ignoreDrafts) {
+                prepared = from(prepared)
+                        .filter(pr -> {
+                            try {
+                                if (pr.isDraft()) {
+                                    listener.info(
+                                        "PR #{} is draft and 'Ignore drafts' is enabled. Skipping.",
+                                        pr.getNumber()
+                                    );
+                                    return false;
+                                }
+                                return true;
+                            } catch (IOException e) {
+                                listener.debug("Couldn't read draft state for PR #{}: {}", pr.getNumber(), e.toString());
+                                return true; // be permissive on failure, or return false if you prefer strict
+                            }
+                        })
+                        .toSet();
+            }
 
             List<GitHubPRCause> causes = from(prepared)
                     .filter(and(

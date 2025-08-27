@@ -21,6 +21,8 @@ target/
 !.idea/codeStyleSettings.xml
 !.idea/encodings.xml
 
+.vscode
+
 ## File-based project format:
 *.ipr
 *.iws

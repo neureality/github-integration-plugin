@@ -33,7 +33,7 @@
 
     <properties>
         <revision>0.7.3</revision>
-        <changelist>-SNAPSHOT</changelist>
+        <changelist>-NR-CHANGES-SNAPSHOT</changelist>
         <jenkins.version>2.414.3</jenkins.version>
     </properties>
 

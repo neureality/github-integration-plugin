@@ -42,8 +42,8 @@ public abstract class GitHubTrigger<T extends GitHubTrigger<T>> extends Trigger<
     /**
      * Cancel queued runs for specific kind (i.e. PR by number, branch by name).
      */
-    protected boolean cancelQueued = false;
-    private boolean abortRunning = false;
+    protected boolean cancelQueued = true;
+    private boolean abortRunning = true;
     protected boolean skipFirstRun = false;
 
     @Beta

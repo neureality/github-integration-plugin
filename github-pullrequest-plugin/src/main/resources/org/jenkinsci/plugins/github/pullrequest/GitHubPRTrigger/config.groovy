@@ -30,11 +30,15 @@ f.block {
         }
 
         f.entry(title: "Cancel queued builds", field: "cancelQueued") {
-            f.checkbox()
+            f.checkbox(default: true)
         }
 
         f.entry(title: "Abort running builds", field: "abortRunning") {
-            f.checkbox()
+            f.checkbox(default: true)
+        }
+
+        f.entry(title: "Ignore draft pull requests", field: "ignoreDrafts") {
+            f.checkbox(default: true)
         }
 
         f.entry(title: "Skip older PRs on first run", field: "skipFirstRun") {

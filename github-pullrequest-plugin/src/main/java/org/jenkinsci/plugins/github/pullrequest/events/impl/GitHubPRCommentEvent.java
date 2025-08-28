@@ -54,17 +54,35 @@ public class GitHubPRCommentEvent extends GitHubPREvent {
 
         GitHubPRCause cause = null;
         try {
-            for (GHIssueComment issueComment : remotePR.getComments()) {
-                if (isNull(localPR) // test all comments for trigger word even if we never saw PR before
-                        || isNull(localPR.getLastCommentCreatedAt()) // PR was created but had no comments
-                        // don't check comments that we saw before
-                        || localPR.getLastCommentCreatedAt().compareTo(issueComment.getCreatedAt()) < 0) {
-                    llog.printf("%s: state has changed (new comment found - '%s')%n",
-                            DISPLAY_NAME, issueComment.getBody());
+            // Only proceed if we have a baseline timestamp
+            final java.util.Date lastSeen =
+                (localPR != null) ? localPR.getLastCommentCreatedAt() : null;
 
+            if (localPR == null) {
+                // First scan of this PR by the plugin
+                llog.printf("%s: first scan of PR #%d, skipping existing comments%n",
+                            DISPLAY_NAME, remotePR.getNumber());
+                return null;
+            }
+
+            if (lastSeen == null) {
+                // PR was tracked but had no comments previously
+                llog.printf("%s: no previous comments recorded, checking current comments%n", DISPLAY_NAME);
+
+                for (GHIssueComment issueComment : remotePR.getComments()) {
+                    llog.printf("%s: checking comment: '%s'%n", DISPLAY_NAME, issueComment.getBody());
                     cause = checkComment(prDecisionContext, issueComment, prUserRestriction, listener);
-                    if (nonNull(cause)) {
-                        break;
+                    if (cause != null) break;
+                }
+            } else {
+                // Normal case: only process comments newer than the last seen timestamp.
+                llog.printf("%s: last recorded comment at %tc%n", DISPLAY_NAME, lastSeen);
+
+                for (GHIssueComment issueComment : remotePR.getComments()) {
+                    if (issueComment.getCreatedAt().after(lastSeen)) {
+                        llog.printf("%s: new comment: '%s'%n", DISPLAY_NAME, issueComment.getBody());
+                        cause = checkComment(prDecisionContext, issueComment, prUserRestriction, listener);
+                        if (cause != null) break;
                     }
                 }
             }
